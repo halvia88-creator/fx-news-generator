@@ -24,6 +24,7 @@ function App() {
     const [currentStep, setCurrentStep] = useState('dashboard'); // dashboard, topics, posts
     const [forexRates, setForexRates] = useState([]);
     const [newsSources, setNewsSources] = useState([]);
+    const [trendingKeywords, setTrendingKeywords] = useState([]);
 
     // Step 1: Fetch News
     const handleFetchNews = async () => {
@@ -45,8 +46,10 @@ function App() {
             const newsResponse = await axios.get(`${API_BASE_URL}/api/news/aggregated`);
             const fetchedArticles = newsResponse.data.articles;
             const sources = newsResponse.data.sources || [];
+            const keywords = newsResponse.data.trendingKeywords || [];
             setArticles(fetchedArticles);
             setNewsSources(sources);
+            setTrendingKeywords(keywords);
             setLastFetchTime(new Date().toISOString());
 
             // Fetch forex rates
@@ -134,6 +137,7 @@ function App() {
                         lastFetchTime={lastFetchTime}
                         forexRates={forexRates}
                         newsSources={newsSources}
+                        trendingKeywords={trendingKeywords}
                     />
                 )}
 

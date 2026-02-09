@@ -99,6 +99,21 @@ export async function aggregateNews(req, res) {
 
         const allArticles = [];
         const sources = [];
+        let trendingKeywords = [];
+
+        // Fetch from Trending News (HIGHEST PRIORITY - trend-based filtering)
+        try {
+            const trendingResult = await fetchTrendingNewsArticles();
+            if (trendingResult.articles.length > 0) {
+                allArticles.push(...trendingResult.articles);
+                sources.push('Trending (Gemini)');
+                trendingKeywords = trendingResult.keywords;
+                console.log(`✅ Trending News: ${trendingResult.articles.length} articles`);
+                console.log(`🔥 Trending Keywords: ${trendingKeywords.join(', ')}`);
+            }
+        } catch (error) {
+            console.log(`⚠️  Trending News failed: ${error.message}`);
+        }
 
         // Fetch from Gemini Real-time Search (NEW - highest priority for freshness)
         try {
@@ -157,6 +172,7 @@ export async function aggregateNews(req, res) {
                 count: mockArticles.length,
                 articles: mockArticles,
                 sources: ['Mock Data'],
+                trendingKeywords: [],
                 timestamp: new Date().toISOString(),
                 note: 'Using mock data - all news sources failed or returned no results'
             });
@@ -175,6 +191,7 @@ export async function aggregateNews(req, res) {
             count: uniqueArticles.length,
             articles: uniqueArticles,
             sources: sources,
+            trendingKeywords: trendingKeywords,
             timestamp: new Date().toISOString()
         });
 
@@ -260,6 +277,81 @@ async function fetchAlphaVantageArticles() {
         }));
     }
     return [];
+}
+
+/**
+ * Helper function to fetch trending news articles
+ */
+async function fetchTrendingNewsArticles() {
+    const API_KEY = process.env.GEMINI_API_KEY;
+    if (!API_KEY) return { articles: [], keywords: [] };
+
+    try {
+        const { GoogleGenerativeAI } = await import('@google/generative-ai');
+        const genAI = new GoogleGenerativeAI(API_KEY);
+
+        // Step 1: Detect trending keywords
+        const trendModel = genAI.getGenerativeModel({
+            model: 'gemini-1.5-flash',
+            tools: [{ googleSearch: {} }]
+        });
+
+        const trendPrompt = `Google検索を使用して、本日のFX・為替市場で話題のキーワードを5個検出してください。
+JSON形式で返してください：[{"keyword": "キーワード"}]`;
+
+        const trendResult = await trendModel.generateContent(trendPrompt);
+        const trendResponse = await trendResult.response;
+        let trendText = trendResponse.text();
+        trendText = trendText.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+
+        const trends = JSON.parse(trendText);
+        const keywords = trends.map(t => t.keyword).slice(0, 5);
+
+        if (keywords.length === 0) {
+            return { articles: [], keywords: [] };
+        }
+
+        // Step 2: Search news for trending keywords
+        const newsModel = genAI.getGenerativeModel({
+            model: 'gemini-1.5-flash',
+            tools: [{ googleSearch: {} }]
+        });
+
+        const keywordList = keywords.join(', ');
+        const newsPrompt = `Google検索を使用して、以下のキーワードに関連する本日の最新FXニュースを検索してください。
+キーワード: ${keywordList}
+
+JSON形式で返してください：
+[{"title": "タイトル", "description": "要約", "url": "URL", "publishedAt": "日時", "source": "ソース"}]
+
+最大10件。`;
+
+        const newsResult = await newsModel.generateContent(newsPrompt);
+        const newsResponse = await newsResult.response;
+        let newsText = newsResponse.text();
+        newsText = newsText.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+
+        const articles = JSON.parse(newsText);
+
+        return {
+            keywords: keywords,
+            articles: articles
+                .filter(article => article.title && article.description)
+                .slice(0, 10)
+                .map(article => ({
+                    title: article.title,
+                    description: article.description,
+                    url: article.url || 'https://example.com',
+                    publishedAt: article.publishedAt || new Date().toISOString(),
+                    source: `${article.source || 'Web Search'} (Trending)`,
+                    apiSource: 'Trending',
+                    isTrending: true
+                }))
+        };
+    } catch (error) {
+        console.error('Trending news fetch error:', error.message);
+        return { articles: [], keywords: [] };
+    }
 }
 
 /**

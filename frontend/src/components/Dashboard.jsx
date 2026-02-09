@@ -1,7 +1,7 @@
 import React from 'react';
 import './Dashboard.css';
 
-export default function Dashboard({ onFetchNews, loading, lastFetchTime, forexRates, newsSources }) {
+export default function Dashboard({ onFetchNews, loading, lastFetchTime, forexRates, newsSources, trendingKeywords }) {
     return (
         <div className="dashboard card fade-in">
             <div className="dashboard-content">
@@ -44,6 +44,22 @@ export default function Dashboard({ onFetchNews, loading, lastFetchTime, forexRa
                         <p className="sources-label">
                             📰 ニュースソース: {newsSources.join(', ')}
                         </p>
+                    </div>
+                )}
+
+                {/* Trending Keywords Display */}
+                {trendingKeywords && trendingKeywords.length > 0 && (
+                    <div className="trending-keywords">
+                        <p className="trending-label">
+                            🔥 話題のキーワード:
+                        </p>
+                        <div className="keywords-container">
+                            {trendingKeywords.map((keyword, index) => (
+                                <span key={index} className="keyword-tag">
+                                    {keyword}
+                                </span>
+                            ))}
+                        </div>
                     </div>
                 )}
 
