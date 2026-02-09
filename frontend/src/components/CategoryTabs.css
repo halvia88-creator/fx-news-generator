@@ -1,0 +1,110 @@
+.category-tabs {
+    margin-bottom: var(--spacing-lg);
+}
+
+.tabs-container {
+    display: flex;
+    gap: var(--spacing-sm);
+    padding: var(--spacing-xs);
+    background: var(--bg-glass);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    overflow-x: auto;
+    scrollbar-width: thin;
+}
+
+.tabs-container::-webkit-scrollbar {
+    height: 6px;
+}
+
+.tabs-container::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.tabs-container::-webkit-scrollbar-thumb {
+    background: rgba(102, 126, 234, 0.3);
+    border-radius: 3px;
+}
+
+.tab-button {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+    padding: var(--spacing-sm) var(--spacing-md);
+    background: transparent;
+    border: 2px solid transparent;
+    border-radius: var(--radius-md);
+    color: var(--text-secondary);
+    font-size: var(--font-size-base);
+    font-weight: 500;
+    cursor: pointer;
+    transition: all var(--transition-base);
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.tab-button:hover {
+    background: rgba(102, 126, 234, 0.1);
+    color: var(--text-primary);
+    transform: translateY(-2px);
+}
+
+.tab-button.active {
+    background: var(--primary-gradient);
+    border-color: rgba(102, 126, 234, 0.5);
+    color: white;
+    box-shadow: var(--shadow-glow);
+}
+
+.tab-icon {
+    font-size: 1.2em;
+    line-height: 1;
+}
+
+.tab-label {
+    font-weight: 600;
+}
+
+.tab-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 24px;
+    height: 24px;
+    padding: 0 6px;
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 12px;
+    font-size: var(--font-size-sm);
+    font-weight: 700;
+}
+
+.tab-button.active .tab-badge {
+    background: rgba(255, 255, 255, 0.4);
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+    .tabs-container {
+        gap: var(--spacing-xs);
+    }
+
+    .tab-button {
+        padding: var(--spacing-xs) var(--spacing-sm);
+        font-size: var(--font-size-sm);
+    }
+
+    .tab-label {
+        display: none;
+    }
+
+    .tab-icon {
+        font-size: 1.5em;
+    }
+
+    .tab-badge {
+        min-width: 20px;
+        height: 20px;
+        font-size: 0.75rem;
+    }
+}

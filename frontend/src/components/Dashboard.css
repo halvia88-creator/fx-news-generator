@@ -1,0 +1,135 @@
+.dashboard {
+    text-align: center;
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+.dashboard-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--spacing-md);
+}
+
+.dashboard-icon {
+    animation: float 3s ease-in-out infinite;
+}
+
+@keyframes float {
+
+    0%,
+    100% {
+        transform: translateY(0);
+    }
+
+    50% {
+        transform: translateY(-10px);
+    }
+}
+
+.dashboard-description {
+    color: var(--text-secondary);
+    font-size: var(--font-size-base);
+    line-height: 1.8;
+}
+
+/* Forex Rates Section */
+.forex-rates {
+    width: 100%;
+    margin: var(--spacing-md) 0;
+    padding: var(--spacing-md);
+    background: var(--bg-glass);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+}
+
+.forex-rates h3 {
+    font-size: var(--font-size-base);
+    color: var(--text-primary);
+    margin-bottom: var(--spacing-sm);
+    font-weight: 600;
+}
+
+.rates-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+    gap: var(--spacing-sm);
+}
+
+.rate-item {
+    display: flex;
+    flex-direction: column;
+    padding: var(--spacing-xs);
+    background: rgba(102, 126, 234, 0.1);
+    border-radius: var(--radius-sm);
+    transition: all 0.3s ease;
+}
+
+.rate-item:hover {
+    background: rgba(102, 126, 234, 0.2);
+    transform: translateY(-2px);
+}
+
+.rate-pair {
+    font-size: var(--font-size-sm);
+    color: var(--text-muted);
+    font-weight: 500;
+}
+
+.rate-value {
+    font-size: var(--font-size-base);
+    color: var(--text-primary);
+    font-weight: 700;
+    margin-top: 4px;
+}
+
+/* News Sources Section */
+.news-sources {
+    width: 100%;
+    margin: var(--spacing-sm) 0;
+}
+
+.sources-label {
+    font-size: var(--font-size-sm);
+    color: var(--text-secondary);
+    padding: var(--spacing-xs) var(--spacing-md);
+    background: var(--bg-glass);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    display: inline-block;
+}
+
+.last-fetch {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+    padding: var(--spacing-xs) var(--spacing-md);
+    background: var(--bg-glass);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    font-size: var(--font-size-sm);
+}
+
+.last-fetch-label {
+    color: var(--text-muted);
+}
+
+.last-fetch-time {
+    color: var(--text-primary);
+    font-weight: 500;
+}
+
+.btn-large {
+    padding: var(--spacing-md) var(--spacing-xl);
+    font-size: var(--font-size-lg);
+    min-width: 280px;
+}
+
+.spinner-small {
+    width: 20px;
+    height: 20px;
+    border: 3px solid rgba(255, 255, 255, 0.3);
+    border-top-color: white;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
