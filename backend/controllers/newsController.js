@@ -16,12 +16,12 @@ export async function fetchNews(req, res) {
         // FX/為替関連キーワード（拡張版）
         const query = 'forex OR FX OR 為替 OR ドル OR 円 OR ユーロ OR ポンド OR currency OR "exchange rate" OR "central bank" OR "Federal Reserve" OR ECB OR "Bank of Japan" OR 日銀 OR 介入 OR USD OR JPY OR EUR OR GBP OR CHF OR AUD OR CAD OR "currency pair" OR "forex market" OR "foreign exchange"';
 
-        // Get date range (past 7 days to account for NewsAPI free plan delays)
+        // Get date range (past 2 days for fresher news)
         const today = new Date();
-        const sevenDaysAgo = new Date(today);
-        sevenDaysAgo.setDate(today.getDate() - 7);
+        const twoDaysAgo = new Date(today);
+        twoDaysAgo.setDate(today.getDate() - 2);
 
-        const fromDate = sevenDaysAgo.toISOString().split('T')[0];
+        const fromDate = twoDaysAgo.toISOString().split('T')[0];
         const toDate = today.toISOString().split('T')[0];
 
         console.log(`📰 Fetching news from ${fromDate} to ${toDate}`);
@@ -99,6 +99,18 @@ export async function aggregateNews(req, res) {
 
         const allArticles = [];
         const sources = [];
+
+        // Fetch from Gemini Real-time Search (NEW - highest priority for freshness)
+        try {
+            const geminiArticles = await fetchGeminiRealtimeArticles();
+            if (geminiArticles.length > 0) {
+                allArticles.push(...geminiArticles);
+                sources.push('Gemini Real-time');
+                console.log(`✅ Gemini Real-time: ${geminiArticles.length} articles`);
+            }
+        } catch (error) {
+            console.log(`⚠️  Gemini Real-time failed: ${error.message}`);
+        }
 
         // Fetch from NewsAPI
         try {
@@ -184,13 +196,13 @@ async function fetchNewsAPIArticles() {
 
     const query = 'forex OR FX OR 為替 OR ドル OR 円 OR ユーロ OR ポンド OR currency OR "exchange rate" OR "central bank" OR "Federal Reserve" OR ECB OR "Bank of Japan" OR 日銀 OR 介入 OR USD OR JPY OR EUR OR GBP OR CHF OR AUD OR CAD OR "currency pair" OR "forex market" OR "foreign exchange"';
     const today = new Date();
-    const sevenDaysAgo = new Date(today);
-    sevenDaysAgo.setDate(today.getDate() - 7);
+    const twoDaysAgo = new Date(today);
+    twoDaysAgo.setDate(today.getDate() - 2);
 
     const url = 'https://newsapi.org/v2/everything';
     const params = {
         q: query,
-        from: sevenDaysAgo.toISOString().split('T')[0],
+        from: twoDaysAgo.toISOString().split('T')[0],
         to: today.toISOString().split('T')[0],
         sortBy: 'publishedAt',
         language: 'en,ja',
@@ -251,6 +263,70 @@ async function fetchAlphaVantageArticles() {
 }
 
 /**
+ * Helper function to fetch real-time articles from Gemini grounding
+ */
+async function fetchGeminiRealtimeArticles() {
+    const API_KEY = process.env.GEMINI_API_KEY;
+    if (!API_KEY) return [];
+
+    try {
+        const { GoogleGenerativeAI } = await import('@google/generative-ai');
+        const genAI = new GoogleGenerativeAI(API_KEY);
+
+        const model = genAI.getGenerativeModel({
+            model: 'gemini-1.5-flash',
+            tools: [{
+                googleSearch: {}
+            }]
+        });
+
+        const prompt = `あなたは金融ニュースアナリストです。
+Google検索を使用して、**本日（過去24時間以内）**の最新FX・為替市場ニュースを検索し、
+以下のJSON形式で返してください：
+
+[
+  {
+    "title": "ニュースタイトル",
+    "description": "要約（100文字程度）",
+    "url": "ソースURL",
+    "publishedAt": "公開日時（ISO 8601形式）",
+    "source": "ニュースソース名"
+  }
+]
+
+【検索条件】
+- 過去24時間以内のニュース
+- FX、為替、通貨、中央銀行に関連
+- 信頼できるニュースソースのみ
+- 最大10件
+
+JSON配列のみで回答してください。`;
+
+        const result = await model.generateContent(prompt);
+        const response = await result.response;
+        let text = response.text();
+
+        text = text.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+        const articles = JSON.parse(text);
+
+        return articles
+            .filter(article => article.title && article.description)
+            .slice(0, 10)
+            .map(article => ({
+                title: article.title,
+                description: article.description,
+                url: article.url || 'https://example.com',
+                publishedAt: article.publishedAt || new Date().toISOString(),
+                source: `${article.source || 'Web Search'} (Gemini)`,
+                apiSource: 'Gemini Grounding'
+            }));
+    } catch (error) {
+        console.error('Gemini grounding error:', error.message);
+        return [];
+    }
+}
+
+/**
  * Helper function to fetch articles from Finnhub
  */
 async function fetchFinnhubArticles() {
@@ -258,8 +334,8 @@ async function fetchFinnhubArticles() {
     if (!API_KEY) return [];
 
     const today = new Date();
-    const sevenDaysAgo = new Date(today);
-    sevenDaysAgo.setDate(today.getDate() - 7);
+    const twoDaysAgo = new Date(today);
+    twoDaysAgo.setDate(today.getDate() - 2);
 
     const allArticles = [];
 
@@ -268,7 +344,7 @@ async function fetchFinnhubArticles() {
         const forexUrl = 'https://finnhub.io/api/v1/news';
         const forexParams = {
             category: 'forex',
-            from: sevenDaysAgo.toISOString().split('T')[0],
+            from: twoDaysAgo.toISOString().split('T')[0],
             to: today.toISOString().split('T')[0],
             token: API_KEY
         };
@@ -298,7 +374,7 @@ async function fetchFinnhubArticles() {
         const generalUrl = 'https://finnhub.io/api/v1/news';
         const generalParams = {
             category: 'general',
-            from: sevenDaysAgo.toISOString().split('T')[0],
+            from: twoDaysAgo.toISOString().split('T')[0],
             to: today.toISOString().split('T')[0],
             token: API_KEY
         };

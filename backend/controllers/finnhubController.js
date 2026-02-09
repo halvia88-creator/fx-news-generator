@@ -16,12 +16,12 @@ export async function fetchForexNews(req, res) {
 
         console.log('📰 Fetching forex news from Finnhub...');
 
-        // Get date range (past 7 days)
+        // Get date range (past 2 days for fresher news)
         const today = new Date();
-        const sevenDaysAgo = new Date(today);
-        sevenDaysAgo.setDate(today.getDate() - 7);
+        const twoDaysAgo = new Date(today);
+        twoDaysAgo.setDate(today.getDate() - 2);
 
-        const fromDate = sevenDaysAgo.toISOString().split('T')[0];
+        const fromDate = twoDaysAgo.toISOString().split('T')[0];
         const toDate = today.toISOString().split('T')[0];
 
         const url = 'https://finnhub.io/api/v1/news';

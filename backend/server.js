@@ -6,6 +6,7 @@ import { generateTopics, generateCategorizedTopics } from './controllers/topicsC
 import { generatePosts } from './controllers/postsController.js';
 import { fetchForexRates as fetchAlphaVantageRates, fetchNewsSentiment } from './controllers/alphaVantageController.js';
 import { fetchForexNews, fetchForexRates as fetchFinnhubRates } from './controllers/finnhubController.js';
+import { searchRealtimeNews, searchNewsByCategory } from './controllers/geminiNewsController.js';
 
 // Load environment variables
 dotenv.config();
@@ -32,6 +33,8 @@ app.get('/api/health', (req, res) => {
 app.get('/api/news', fetchNews);
 app.get('/api/news/aggregated', aggregateNews);
 app.get('/api/news/sentiment', fetchNewsSentiment);
+app.get('/api/news/realtime', searchRealtimeNews);
+app.get('/api/news/realtime/category/:category', searchNewsByCategory);
 
 // Forex Rates Routes
 app.get('/api/forex-rates', fetchFinnhubRates);
